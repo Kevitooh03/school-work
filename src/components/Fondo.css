@@ -1,0 +1,156 @@
+.fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* --- Manchas de aurora ------------------------------------- */
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.aurora--a {
+  width: 62vmax;
+  height: 62vmax;
+  left: -24vmax;
+  top: -28vmax;
+  background: radial-gradient(circle, #ff3d81 0%, rgba(255, 61, 129, 0) 68%);
+  animation: deriva-a 30s var(--ease-in-out) infinite;
+}
+
+.aurora--b {
+  width: 54vmax;
+  height: 54vmax;
+  right: -22vmax;
+  top: -14vmax;
+  background: radial-gradient(circle, #eb50dc 0%, rgba(139, 43, 226, 0) 70%);
+  animation: deriva-b 36s var(--ease-in-out) infinite;
+}
+
+.aurora--c {
+  width: 70vmax;
+  height: 70vmax;
+  left: 8vmax;
+  bottom: -42vmax;
+  background: radial-gradient(circle, #15088a 0%, rgba(255, 122, 69, 0) 66%);
+  opacity: 0.34;
+  animation: deriva-c 42s var(--ease-in-out) infinite;
+}
+
+.aurora--d {
+  width: 34vmax;
+  height: 34vmax;
+  right: 6vmax;
+  bottom: -8vmax;
+  background: radial-gradient(circle, #0968b0 0%, rgba(255, 214, 165, 0) 70%);
+  opacity: 0.22;
+  animation: deriva-b 28s var(--ease-in-out) infinite reverse;
+}
+
+@keyframes deriva-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10vmax, 8vmax, 0) scale(1.18);
+  }
+}
+
+@keyframes deriva-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-8vmax, 12vmax, 0) scale(0.9);
+  }
+}
+
+@keyframes deriva-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-12vmax, -10vmax, 0) scale(1.22);
+  }
+}
+
+/* --- Halo central que respira detrás del contenido --------- */
+.halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(70vmin, 620px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 179, 201, 0.22) 0%,
+    rgba(255, 107, 157, 0.08) 40%,
+    transparent 70%
+  );
+  animation: latido 9s var(--ease-in-out) infinite;
+}
+
+@keyframes latido {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* --- Grano de película -------------------------------------- */
+.grano {
+  position: absolute;
+  inset: -120px;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grano 6s steps(5) infinite;
+}
+
+@keyframes grano {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-24px, 16px);
+  }
+  40% {
+    transform: translate(18px, -22px);
+  }
+  60% {
+    transform: translate(-16px, -12px);
+  }
+  80% {
+    transform: translate(22px, 20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* --- Viñeta ------------------------------------------------ */
+.vineta {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 100% at 50% 50%,
+    transparent 45%,
+    rgba(6, 2, 8, 0.55) 100%
+  );
+}

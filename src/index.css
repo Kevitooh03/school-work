@@ -1,0 +1,128 @@
+/* ============================================================
+   Base global: tokens, reset y tipografía
+   ============================================================ */
+
+:root {
+  /* Tipografías */
+  --fuente-titulo: "Cormorant Garamond", "Playfair Display", Georgia,
+    "Times New Roman", serif;
+  --fuente-cuerpo: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+
+  /* Paleta */
+  --noche: #100510;
+  --ciruela: #2a0c25;
+  --vino: #6d1339;
+  --rosa: #ff6b9d;
+  --rosa-claro: #ffb3c9;
+  --oro: #ffd6a5;
+  --crema: #fff6f3;
+  --tinta: #2b0a1e;
+
+  /* Superficies */
+  --vidrio: rgba(255, 255, 255, 0.06);
+  --borde-vidrio: rgba(255, 255, 255, 0.14);
+  --sombra-blanda: 0 34px 90px -24px rgba(0, 0, 0, 0.8);
+  --sombra-rosa: 0 18px 60px -22px rgba(255, 107, 157, 0.65);
+
+  /* Curvas de animación compartidas */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--fuente-cuerpo);
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.55;
+  color: var(--crema);
+  background: var(--noche);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(255, 107, 157, 0.35);
+  color: #fff;
+}
+
+/* Texto con degradado animado (títulos) */
+.texto-brillo {
+  background: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    var(--rosa-claro) 28%,
+    var(--oro) 48%,
+    var(--rosa) 68%,
+    #ffffff 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: barrido 9s linear infinite;
+}
+
+@keyframes barrido {
+  to {
+    background-position: 260% 0;
+  }
+}
+
+/* Foco visible y acordeón con el tema oscuro */
+:focus-visible {
+  outline: 2px solid var(--rosa-claro);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Respeta la preferencia del sistema de reducir el movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

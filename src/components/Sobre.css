@@ -1,0 +1,84 @@
+/* ============================================================
+   El sobre.
+
+   El papel ya no se dibuja con CSS: vive en un lienzo 3D
+   (react-three-fiber). Aquí sólo queda la maquetación: el hueco
+   del lienzo, la invitación y el botón invisible que conserva
+   el acceso por teclado.
+   ============================================================ */
+
+.escena-sobre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(18px, 3vh, 34px);
+}
+
+.antetitulo {
+  font-family: var(--fuente-titulo);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.15rem, 3.2vw, 1.7rem);
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: rgba(255, 246, 243, 0.82);
+  text-shadow: 0 4px 26px rgba(255, 107, 157, 0.45);
+}
+
+/* Hueco del lienzo ------------------------------------------- */
+/* Cuadrado a propósito: la carta sale hacia arriba y necesita
+   aire sobre el sobre. La cámara ya encuadra el conjunto. */
+.sobre__lienzo {
+  position: relative;
+  width: min(420px, 92vw);
+  max-height: min(78svh, 520px);
+  aspect-ratio: 1;
+  border-radius: 20px;
+}
+
+.sobre__canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* El sobre se abre al tocar el lienzo; este botón invisible
+   mantiene el foco por teclado y la lectura por lector. */
+.sobre__acceso {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+  background: none;
+  cursor: pointer;
+}
+
+.sobre__lienzo:focus-within {
+  outline: 2px solid var(--rosa-claro);
+  outline-offset: 6px;
+}
+
+/* Invitación ---------------------------------------------------- */
+.invitacion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 246, 243, 0.78);
+}
+
+.invitacion__punto {
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--rosa-claro);
+  text-shadow: 0 0 16px rgba(255, 107, 157, 0.8);
+}

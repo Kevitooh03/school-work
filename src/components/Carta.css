@@ -1,0 +1,528 @@
+﻿/* ============================================================
+   La carta: una hoja de papel real con la letra sincronizada
+
+   La caja tiene ALTURA FIJA (`height`, nunca `max-height`) y el
+   cuerpo es una rejilla con un número fijo de filas. Por eso el
+   tamaño no depende del texto que haya en cada momento: si una
+   línea no cabe, se recorta, pero la caja nunca crece ni se encoge.
+
+   Todo lo que hay por encima del papel (grano, pliegues, sello) es
+   decoración con `aria-hidden`; el contenido real no cambia.
+   ============================================================ */
+
+.carta {
+  position: relative;
+  width: min(680px, 100%);
+  /* Altura fija: el marco es siempre el mismo. */
+  height: min(88svh, 860px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vh, 22px);
+  padding: clamp(22px, 4vw, 40px) clamp(20px, 4.2vw, 44px)
+    clamp(18px, 3.2vw, 30px);
+  border-radius: 10px 12px 14px 8px;
+  overflow: hidden;
+  color: var(--tinta);
+  /* Papel: malva clara, del rosa empolvado al azul perla. Un punto más
+     oscura que el crema de antes, pero sin llegar a oscuro: la tinta
+     sigue siendo la misma y se lee igual de bien. */
+  background:
+    radial-gradient(120% 70% at 18% -6%, rgba(255, 253, 255, 0.85), transparent 62%),
+    radial-gradient(90% 60% at 88% 104%, rgba(122, 100, 164, 0.24), transparent 66%),
+    linear-gradient(177deg, #f4ecf5 0%, #eadfef 34%, #ded0e7 68%, #d0bfdc 100%);
+  box-shadow:
+    0 40px 90px -28px rgba(0, 0, 0, 0.85),
+    0 8px 26px -12px rgba(0, 0, 0, 0.55),
+    inset 0 0 70px rgba(108, 86, 146, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Grano de papel: fibra corta, como de papel de carta ---------- */
+.carta__grano {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Pliegues: la hoja viene doblada en tres ----------------------- */
+.carta__pliegues {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.carta__pliegue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5px;
+  /* Un valle: una línea de sombra y, justo debajo, la luz que
+     devuelve el canto al levantarse. */
+  background: linear-gradient(
+    180deg,
+    rgba(96, 74, 126, 0) 0%,
+    rgba(96, 74, 126, 0.16) 32%,
+    rgba(255, 255, 255, 0.7) 58%,
+    rgba(96, 74, 126, 0.11) 100%
+  );
+}
+
+.carta__pliegue:first-child {
+  top: 33.33%;
+}
+
+.carta__pliegue:last-child {
+  top: 66.66%;
+}
+
+/* Filete superior luminoso: el canto de la hoja que coge la luz */
+.carta__filete {
+  position: absolute;
+  top: 0;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 246, 232, 0.9),
+    transparent
+  );
+}
+
+/* Sello de franqueo -------------------------------------------
+   Es un botón: al tocarlo se suelta de la esquina y se va al lacre
+   del sobre (ver `devolverSello` en `Carta.tsx`). */
+.carta__sello {
+  position: absolute;
+  top: clamp(16px, 3.2vw, 30px);
+  right: clamp(16px, 3.2vw, 30px);
+  z-index: 2;
+  width: clamp(46px, 9vw, 60px);
+  aspect-ratio: 3 / 4;
+  margin: 0;
+  padding: 0;
+  border: 1.5px dashed rgba(74, 40, 104, 0.72);
+  appearance: none;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  color: rgba(74, 40, 104, 0.85);
+  cursor: pointer;
+  /* La carta entera no coge el puntero (sólo el reproductor, ver
+     `App.css`); el sello sí, porque es interactivo. */
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  rotate: 7deg;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow:
+    0 2px 6px rgba(74, 48, 100, 0.24),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.5);
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.carta__sello:hover {
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 4px 12px rgba(74, 48, 100, 0.3),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.6);
+}
+
+.carta__sello:focus-visible {
+  outline: 2px solid rgba(74, 40, 104, 0.9);
+  outline-offset: 3px;
+}
+
+.carta__sello-anillo {
+  position: absolute;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(74, 40, 104, 0.5);
+  box-shadow: inset 0 0 0 2px rgba(74, 40, 104, 0.18);
+}
+
+.carta__sello-nucleo {
+  font-size: clamp(0.95rem, 2.6vw, 1.3rem);
+  line-height: 1;
+  color: rgba(176, 32, 84, 0.92);
+  transform: translateY(-12%);
+}
+
+.carta__sello-pie {
+  position: absolute;
+  bottom: 4px;
+  font-size: 0.42rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(74, 40, 104, 0.78);
+}
+
+/* El contenido va por encima del papel y sus adornos ----------- */
+.carta__cabecera,
+.reproductor {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cabecera ---------------------------------------------------- */
+.carta__cabecera {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  /* El sello ocupa la esquina: la cabecera se aparta un poco */
+  padding: 0 clamp(44px, 10vw, 70px);
+}
+
+.carta__corazon {
+  font-size: clamp(1.35rem, 4vw, 1.6rem);
+  line-height: 1;
+  /* Gota de cera con el corazón hundido */
+  padding: 7px 11px;
+  border-radius: 47% 53% 52% 48% / 52% 48% 52% 48%;
+  background: radial-gradient(circle at 34% 30%, #ff6f8f, #d41a4d 42%, #8c0c2c 78%, #5d0619);
+  box-shadow:
+    0 8px 18px -6px rgba(140, 12, 44, 0.7),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  filter: drop-shadow(0 2px 4px rgba(120, 60, 30, 0.25));
+}
+
+.titulo {
+  font-size: clamp(1.85rem, 6vw, 3.1rem);
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Sobre papel, el brillo va en tinta: el degradado se mantiene
+   animado, pero en tonos de tinta para que parezca escrito.
+
+   Ojo con el `background` de aquí: es shorthand y reinicia
+   `background-clip` a `border-box`, que gana por especificidad sobre
+   el `text` de `.texto-brillo`. Con el recorte en la caja y el texto
+   transparente, el título no se veía en absoluto. Por eso aquí se
+   usa `background-image` (y se repite el recorte y el tamaño). */
+.carta .texto-brillo {
+  background-image: linear-gradient(
+    100deg,
+    #2b0a1e 0%,
+    #6d1339 26%,
+    #a8325f 46%,
+    #6d1339 66%,
+    #2b0a1e 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+}
+
+.carta__dedicatoria {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(74, 52, 96, 0.78);
+}
+
+/* Letra --------------------------------------------------------
+   Rejilla de 3 filas de altura idéntica. Cada fila es una ranura
+   con su propio fundido al cambiar de línea. Tres filas y no cuatro
+   porque las frases más largas (inglés en dos renglones + español)
+   piden ~75px y con cuatro filas sólo quedaban 63px: se recortaban.
+   ------------------------------------------------------------ */
+.carta__cuerpo {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr) auto;
+  gap: clamp(4px, 0.9vh, 10px);
+  /* Recorta lo que no cabe en lugar de estirar la caja. */
+  overflow: hidden;
+  padding: 2px 0;
+}
+
+.ranura {
+  display: grid;
+  /* Una sola celda: durante el fundido la línea que sale y la que
+     entra se superponen en el mismo sitio en lugar de apilarse en
+     filas distintas, que ensancharía la ranura. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 2px;
+}
+
+.ranura > .linea {
+  grid-area: 1 / 1;
+}
+
+.linea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  text-align: center;
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
+}
+
+/* Inglés arriba */
+.linea__en {
+  font-family: var(--fuente-titulo);
+  font-style: italic;
+  font-size: clamp(0.95rem, 2.3vw, 1.3rem);
+  line-height: 1.25;
+  text-wrap: balance;
+  color: rgba(43, 10, 30, 0.82);
+}
+
+/* Español debajo, más discreto y en la tipografía de cuerpo */
+.linea__es {
+  font-family: var(--fuente-cuerpo);
+  font-size: clamp(0.8rem, 1.95vw, 1.02rem);
+  font-weight: 500;
+  line-height: 1.28;
+  text-wrap: balance;
+  letter-spacing: 0.005em;
+  color: rgba(66, 44, 88, 0.8);
+}
+
+/* La línea que se está cantando: tinta plena y un subrayado de
+   lápiz, como si estuviera marcada al leerla. */
+.linea--activa .linea__en {
+  font-weight: 600;
+  color: #2b0a1e;
+  background-image: linear-gradient(
+    180deg,
+    transparent 62%,
+    rgba(255, 107, 157, 0.28) 62%,
+    rgba(255, 107, 157, 0.28) 92%,
+    transparent 92%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.linea--activa .linea__es {
+  font-weight: 600;
+  color: #a8325f;
+}
+
+/* Firma -------------------------------------------------------- */
+.firma-slot {
+  flex: 0 0 auto;
+  height: clamp(48px, 7.5vh, 66px);
+  display: grid;
+  place-items: center end;
+  overflow: hidden;
+}
+
+.firma {
+  margin: 0;
+  text-align: right;
+  font-family: var(--fuente-titulo);
+  font-style: italic;
+  font-size: clamp(0.95rem, 2.3vw, 1.2rem);
+  line-height: 1.3;
+  color: rgba(43, 10, 30, 0.8);
+  /* Como una firma a bolígrafo: un pelo más de presión */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.firma__nombre {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #a8325f;
+}
+
+/* Reproductor -------------------------------------------------- */
+.reproductor {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding-top: clamp(10px, 1.8vh, 16px);
+  /* Línea de troquel: separa el pie como si fuera un borde
+     recortable de la hoja. */
+  border-top: 1px dashed rgba(96, 74, 126, 0.35);
+}
+
+.espectro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  height: 32px;
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+
+.espectro--activo {
+  opacity: 0.92;
+}
+
+.espectro__barra {
+  flex: 1;
+  max-width: 6px;
+  min-height: 3px;
+  border-radius: 999px;
+  /* Tinta y rosa sobre papel, no neón */
+  background: linear-gradient(
+    180deg,
+    #d4245f,
+    #e8608c 58%,
+    rgba(168, 50, 95, 0.45)
+  );
+  box-shadow: 0 1px 4px rgba(140, 30, 70, 0.22);
+  transition: height 130ms linear;
+}
+
+.reproductor__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reproductor__tiempo {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(66, 44, 88, 0.72);
+}
+
+.reproductor__acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.boton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  color: rgba(43, 10, 30, 0.85);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(96, 74, 126, 0.32);
+  box-shadow: 0 2px 6px rgba(74, 48, 100, 0.18);
+  transition:
+    transform 0.25s var(--ease-out),
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.boton:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 6px 14px rgba(74, 48, 100, 0.26);
+}
+
+.boton:active {
+  transform: scale(0.94);
+}
+
+.boton--primario {
+  width: 48px;
+  height: 48px;
+  font-size: 0.95rem;
+  color: #2b0a1e;
+  background: linear-gradient(140deg, #ffd6a5, #ff6b9d 60%, #e0217a);
+  border-color: rgba(109, 19, 57, 0.35);
+  box-shadow:
+    0 10px 26px -10px rgba(190, 26, 77, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.boton--primario:hover {
+  box-shadow:
+    0 16px 34px -12px rgba(190, 26, 77, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Barra de progreso -------------------------------------------- */
+.progreso {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(96, 74, 126, 0.2);
+  box-shadow: inset 0 1px 2px rgba(96, 74, 126, 0.2);
+}
+
+.progreso__pista {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #d4245f, #e8608c 60%, #a8325f);
+  box-shadow: 0 1px 5px rgba(190, 26, 77, 0.4);
+}
+
+.progreso__punto {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: #f7f0f9;
+  border: 1px solid rgba(190, 26, 77, 0.55);
+  box-shadow: 0 1px 5px rgba(96, 40, 84, 0.35);
+  transition: left 0.25s linear;
+}
+
+/* ------------------------------------------------------------
+   Pantallas bajas: el marco sigue siendo el mismo, pero se
+   aprieta el texto para que la línea activa nunca se recorte.
+   ------------------------------------------------------------ */
+@media (max-height: 680px) {
+  .carta__cuerpo {
+    grid-template-rows: repeat(3, 1fr) auto;
+    gap: 2px;
+  }
+
+  .carta__corazon {
+    display: none;
+  }
+
+  .carta__sello {
+    opacity: 0.8;
+  }
+
+  .linea__en {
+    font-size: clamp(0.85rem, 2vw, 1.02rem);
+  }
+
+  .linea__es {
+    font-size: clamp(0.72rem, 1.7vw, 0.86rem);
+  }
+
+  .firma-slot {
+    height: 42px;
+  }
+
+  .espectro {
+    height: 22px;
+  }
+}

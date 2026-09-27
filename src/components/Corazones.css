@@ -1,0 +1,16 @@
+.campo-corazones {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particula {
+  position: absolute;
+  top: 0;
+  line-height: 1;
+  user-select: none;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 0 12px rgba(255, 107, 157, 0.35));
+}

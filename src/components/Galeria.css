@@ -1,0 +1,351 @@
+/* ============================================================
+   Mosaico de fotos: marcos de cartón repartidos por el fondo.
+   Van detrás de la carta (z-index 1) y no reciben el puntero.
+   ============================================================ */
+
+.galeria {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+   El marco ES el botón y tiene su propio tamaño, para que las
+   bandas de las pantallas estrechas puedan pegarse a los bordes
+   de la carta con `translate` sin adivinar su alto.
+   El orden es el del array de `Galeria.tsx`.
+   ------------------------------------------------------------ */
+.foto {
+  /* Escala de las bandas; la redeclaran las consultas de medios */
+  --escala: 1;
+  /* Cuánto crece el marco al mantenerlo pulsado. No es un factor
+     único porque en las bandas el marco sale encogido por `--escala`:
+     en móvil la foto mide 30-50 px, y un 9 % de eso son 3 píxeles, que
+     no se ven. Ahí el factor tiene que ser mayor para que el aviso se
+     note (ver las consultas de medios de abajo). */
+  --pulsado: 1.14;
+  position: absolute;
+  padding: clamp(5px, 0.7vmin, 9px);
+  border: 0;
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  /* Sin esto el navegador espera al doble toque para decidir, y en
+     táctil el `:active` chega tarde (o no llega) */
+  touch-action: manipulation;
+  translate: -50% -50%;
+  scale: var(--escala, 1);
+  /* El desenfoque llega como variable para poder quitarlo desde el CSS
+     cuando la foto está ampliada, que un `filter` inline taparía */
+  filter: blur(var(--desenfoque, 0px)) brightness(1);
+  transition:
+    scale 0.38s var(--ease-out),
+    filter 0.3s ease;
+  background: linear-gradient(155deg, #fdf6ec 0%, #f0e2cf 62%, #dcc8ae 100%);
+  box-shadow:
+    0 22px 40px -16px rgba(0, 0, 0, 0.8),
+    0 6px 14px -6px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(120, 90, 60, 0.25);
+  /* Solo el marco se mueve; la foto de dentro nunca se deforma */
+  animation:
+    foto-entra 1.5s var(--ease-out) both,
+    foto-flotar var(--duracion, 12s) var(--ease-in-out) infinite;
+  animation-delay: 0s, var(--retraso, 0s);
+  will-change: transform;
+}
+
+/* ------------------------------------------------------------
+   Composición de escritorio: las fotos rodean a la carta sin
+   meterse debajo del texto. El orden es el del array de
+   `Galeria.tsx`, así que cada una tiene su sitio fijo.
+
+   Las de las esquinas están algo más metidas hacia dentro que
+   antes: al tocarlas crecen donde están, y muy pegadas al borde
+   no tenían sitio para crecer sin salirse de la pantalla.
+   ------------------------------------------------------------ */
+.foto:nth-child(1) {
+  left: 13%;
+  top: 17%;
+}
+.foto:nth-child(2) {
+  left: 87%;
+  top: 14%;
+}
+.foto:nth-child(3) {
+  left: 22%;
+  top: 41%;
+}
+.foto:nth-child(4) {
+  left: 79%;
+  top: 38%;
+}
+.foto:nth-child(5) {
+  left: 11%;
+  top: 69%;
+}
+.foto:nth-child(6) {
+  left: 89%;
+  top: 66%;
+}
+.foto:nth-child(7) {
+  left: 21%;
+  top: 87%;
+}
+.foto:nth-child(8) {
+  left: 83%;
+  top: 86%;
+}
+
+.foto:hover {
+  filter: blur(var(--desenfoque, 0px)) brightness(1.07);
+}
+
+/* Al tocar, la foto se hincha un poco Y SEQUEDA EN SU SITIO: `scale`
+   crece alrededor del centro, que es justo el centro de la foto, así
+   que no se desplaza ni un píxel. Es el aviso de "te he pillado" antes
+   de que salga el zoom grande. La entrada es rápida y la vuelta usa el
+   `scale 0.38s` de arriba, así que el rebote se nota.
+
+   El brillo, la sombra y el resto de transiciones se repiten aquí
+   porque esta regla sustituye a la lista entera al pulsar. El halo
+   claro es lo que hace que el aviso se note en los marcos pequeños:
+   por muy poco que crezca, el borde se enciende. */
+.foto:active {
+  scale: calc(var(--escala, 1) * var(--pulsado, 1.14));
+  filter: blur(var(--desenfoque, 0px)) brightness(1.12);
+  box-shadow:
+    0 20px 34px -14px rgba(0, 0, 0, 0.9),
+    0 0 0 3px rgba(255, 255, 255, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(120, 90, 60, 0.25);
+  /* Y se congela el vaivén: al tocarla se para justo ahí */
+  animation-play-state: paused;
+  transition:
+    scale 0.09s var(--ease-out),
+    filter 0.09s ease-out,
+    box-shadow 0.09s ease-out;
+}
+
+.foto:focus-visible {
+  outline: 2px solid var(--crema, #fff);
+  outline-offset: 4px;
+}
+
+/* Zona de toque invisible, algo mayor que el marco: en móvil las fotos
+   son tan pequeñas que sin esto no se podrían pulsar con el dedo */
+.foto__golpe {
+  position: absolute;
+  inset: -8px;
+}
+
+/* Filete fino entre el cartón y la imagen */
+.foto::after {
+  content: "";
+  position: absolute;
+  inset: clamp(3px, 0.42vmin, 5px);
+  border: 1px solid rgba(90, 60, 35, 0.28);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.foto__imagen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1px;
+  /* Un punto de calidez para que encajen con la carta, pero sin
+     apagarlas: eligible es la nitidez, no el tono. */
+  filter: saturate(1.08) contrast(1.06) brightness(1.03);
+  user-select: none;
+}
+
+/* Trozo de cinta adhesiva en la esquina superior */
+.foto[data-cinta="si"]::before {
+  content: "";
+  position: absolute;
+  top: clamp(-9px, -1.1vmin, -6px);
+  left: 50%;
+  width: 58%;
+  height: clamp(14px, 2.2vmin, 24px);
+  translate: -50% 0;
+  rotate: -4deg;
+  border-radius: 1px;
+  background: linear-gradient(
+    170deg,
+    rgba(255, 236, 208, 0.42),
+    rgba(255, 226, 190, 0.24)
+  );
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+  mix-blend-mode: screen;
+}
+
+@keyframes foto-entra {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* El vaivén usa `transform` para no chocar con `rotate` y `translate` */
+@keyframes foto-flotar {
+  0%,
+  100% {
+    transform: translate3d(0, -7px, 0);
+  }
+  50% {
+    transform: translate3d(0, 9px, 0);
+  }
+}
+
+/* En las bandas el alto escasea, así que el vaivén se acorta */
+@keyframes foto-flotar-banda {
+  0%,
+  100% {
+    transform: translate3d(0, -3px, 0);
+  }
+  50% {
+    transform: translate3d(0, 4px, 0);
+  }
+}
+
+/* ------------------------------------------------------------
+   Cuando la carta se lleva casi todo el ancho ya no cabe ninguna
+   foto a los lados, así que en vez de esconderlas se recolocan en
+   dos bandas, una sobre la carta y otra debajo, que es donde sí
+   queda sitio. Se ordenan en espejo para que la composición no
+   quede simétrica.
+
+   En vez de calcular la mitad del alto de cada foto, se ancla el
+   `translate` a su borde: la banda de arriba cuelga del borde
+   superior de la carta (`-100%`) y la de abajo arranca de su
+   borde inferior. Así da igual el tamaño de la foto, y el `padding`
+   del cartón no descuadra la separación como sí pasaba al medir
+   desde el centro.
+   ------------------------------------------------------------ */
+@media (max-width: 900px) {
+  .foto {
+    --escala: 0.72;
+    --hueco: 8px;
+    --pulsado: 1.22;
+    /* La banda libre es la mitad del alto que le sobra a la carta. El
+       marco se limita a caber en ella incluso con el vaivén, para que
+       ninguna foto se salga de la pantalla por arriba ni por abajo. */
+    --banda: calc((100svh - 2 * min(44svh, 430px)) / 2 - 2 * var(--hueco) - 5px);
+    max-height: var(--banda);
+    animation-name: foto-entra, foto-flotar-banda;
+  }
+
+  /* Cuelga del borde superior de la carta, hacia arriba */
+  .foto:nth-child(-n + 4) {
+    top: calc(50% - min(44svh, 430px) - var(--hueco));
+    translate: -50% -100%;
+  }
+
+  /* Arranca del borde inferior de la carta, hacia abajo */
+  .foto:nth-child(n + 5) {
+    top: calc(50% + min(44svh, 430px) + var(--hueco));
+    translate: -50% 0;
+  }
+
+  /* En las bandas se reparten casi en equisdistancia, con los
+     extremos a un 15 % del borde: pegadas al borde no podrían
+     crecer al tocarlas sin salirse de la pantalla */
+  .foto:nth-child(1) {
+    left: 16%;
+  }
+  .foto:nth-child(2) {
+    left: 39%;
+  }
+  .foto:nth-child(3) {
+    left: 62%;
+  }
+  .foto:nth-child(4) {
+    left: 85%;
+  }
+  .foto:nth-child(5) {
+    left: 85%;
+  }
+  .foto:nth-child(6) {
+    left: 62%;
+  }
+  .foto:nth-child(7) {
+    left: 39%;
+  }
+  .foto:nth-child(8) {
+    left: 16%;
+  }
+}
+
+/* Móvil: la banda libre es de unos 50 px, así que las fotos bajan
+   de escala para caber enteras sin salirse de la pantalla. Con lo
+   pequeño que quedan, el aviso al tocarlas necesita casi el doble de
+   factor para que se note. */
+@media (max-width: 620px) {
+  .foto {
+    --escala: 0.5;
+    --hueco: 5px;
+    --pulsado: 1.34;
+  }
+}
+
+/* ============================================================
+   Foto agrandada
+
+   Va al final a propósito: estas reglas tienen que ganar a las de
+   posición de arriba y a las de las bandas, que son igual de
+   específicas y van antes.
+
+   Al tocarla NO se va al centro ni tapa la carta: se agranda en el
+   sitio donde ya estaba, con `scale`, que crece alrededor de su
+   centro. La galería entera sigue por debajo de la carta (z-index 1
+   en `App.css`), así que la hoja queda limpia y legible aunque la
+   foto se le meta debajo.
+   ============================================================ */
+
+.foto[data-ampliada="si"] {
+  /* Cuánto crece lo mide `Galeria.tsx` y lo deja en `--crece`: es lo
+     que cabe hasta el borde de la pantalla sin salirse, y como mucho
+     un 50 %. Aquí sólo se multiplica por la escala de las bandas. */
+  scale: calc(var(--escala, 1) * var(--crece, 1.4));
+  /* Se queda quieta: a este tamaño el vaivén marearía */
+  animation: foto-amplia 0.45s var(--ease-out) both;
+  filter: brightness(1.04);
+  box-shadow:
+    0 34px 60px -18px rgba(0, 0, 0, 0.95),
+    0 10px 22px -8px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(120, 90, 60, 0.25);
+}
+
+.foto[data-ampliada="si"]:hover {
+  filter: brightness(1.04);
+}
+
+/* Ya está abierta, así que el toque la cierra: aquí el efecto es el
+   contrario, una presión mínima hacia dentro */
+.foto[data-ampliada="si"]:active {
+  scale: 0.97;
+  filter: brightness(1.04);
+}
+
+/* La cinta de la esquina queda absurda a este tamaño */
+.foto[data-ampliada="si"][data-cinta="si"]::before {
+  display: none;
+}
+
+@keyframes foto-amplia {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}

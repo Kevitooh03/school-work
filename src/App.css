@@ -1,0 +1,90 @@
+/* ============================================================
+   Escenario: capa de fondo + contenido centrado
+   ============================================================ */
+
+.escenario {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 56px);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #3a0f2c 0%, #1a0716 45%, var(--noche) 100%);
+}
+
+.escenario__contenido {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  /* El contenedor ocupa todo el ancho, así que con puntero activo se
+     convertía en una pared invisible que se comía el toque de las
+     fotos. La carta y el sobre tampoco hacen falta para pulsarlos: lo
+     único que hay que poder tocar es el lienzo del sobre y el
+     reproductor de la carta (ver más abajo). */
+  pointer-events: none;
+}
+
+/* Los dos objetos de la experiencia sí aceptan el puntero */
+.sobre__lienzo,
+.carta .reproductor {
+  pointer-events: auto;
+}
+
+/* Aviso cuando el navegador bloquea el autoplay */
+.aviso-audio {
+  position: fixed;
+  z-index: 5;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  color: var(--crema);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--borde-vidrio);
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: var(--sombra-rosa);
+  animation: respirar 2.6s var(--ease-in-out) infinite;
+  /* En móvil cae encima de la banda de fotos de abajo y las dejaba
+     impossibles de tocar. El botón sigue siendo operable con teclado
+     y lector de pantalla; con puntero lo resuelve el primer toque en
+     cualquier sitio (ver `App.tsx`). */
+  pointer-events: none;
+}
+
+@keyframes respirar {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   Pantalla baja (móvil apaisado, ventana arrastrada hasta el suelo)
+
+   El escenario está pensado en vertical: el lienzo del sobre mide
+   420 px y la carta ocupa el 88 % del alto, así que en 390-430 px de
+   alto no caben y la banda de fotos de abajo se salía de la pantalla
+   sin poder tocarla. `zoom` encoge la escena entera de golpe (carta,
+   sobre y fotos) y recalcula el layout, a diferencia de `transform`,
+   que dejaría las fotos fuera y rompería el puntero.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 620px) {
+  .escenario {
+    zoom: 0.78;
+  }
+}
